@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="new_weather.css"> <!-- CodePen source: http://codepen.io/weaintplastic/pen/qEMZbx -->
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" /> <!-- Leaflet -->
 
     <style>
         html, body{
@@ -16,6 +17,22 @@
             overflow: hidden;
             font-family: 'Open Sans', sans-serif;
             font-size: 10px;
+        }
+        #map { 
+            position:fixed;
+            width:50%;
+            height:100%;
+            z-index:0;
+            background-color: #FFF;
+            margin: -25px -50px -25px -25px;
+        }
+        #gradient {
+            height: 150px;
+            margin: -25px -50px -125px -25px;
+            background: -webkit-linear-gradient(bottom, rgba(255,255,255,0), rgba(255,255,255,0.6), rgba(255,255,255,1)); /* For Safari 5.1 to 6.0 */
+            background: -o-linear-gradient(     top,    rgba(255,255,255,0), rgba(255,255,255,0.6), rgba(255,255,255,1)); /* For Opera 11.1 to 12.0 */
+            background: -moz-linear-gradient(   top,    rgba(255,255,255,0), rgba(255,255,255,0.6), rgba(255,255,255,1)); /* For Firefox 3.6 to 15 */
+            background: linear-gradient(to      top,    rgba(255,255,255,0), rgba(255,255,255,0.6), rgba(255,255,255,1)); /* Standard syntax (must be last) */
         }
         #loader {
             display: none;
@@ -41,6 +58,9 @@
             color: #5AC2E7;
             background-color: #FFF;
             box-shadow: 15px 15px 15px 15px rgba(0,0,0,0.25);
+        }
+        svg path {
+            transition: fill 1s ease;
         }
         svg:hover path {
             fill: #282828 !important;
@@ -70,10 +90,18 @@
     </div>
     
     <div class="col-sm-6" id="info">
+        <!-- Leaflet map goes here -->
+        <div id="map"></div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div id="gradient"></div> 
+            </div>
+        </div>
+        
         <div class="row">
             <div class="col-sm-12">
                 <h2>Checking the weather in a "Smart City."</h2>
-                <h4>Explore results from Data Canvas' other cities.</h4>
                 <div class="input-group">
                     <div class="input-group-btn">
                         <div class="btn-group">
@@ -102,11 +130,29 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
 
 <script type="text/javascript">
     // globals
     var original_temp;
     var original_desc;
+    var latlngs = {
+        'Bangalore':      [12.9667, 77.5667],
+        'Boston':         [42.364255, -71.071577],
+        'Geneva':         [46.203188, 6.137050],
+        'Rio de Janeiro': [-22.904355, -43.175893],
+        'San Francisco':  [37.790129, -122.408418],
+        'Shanghai':       [31.244311, 121.479499],
+        'Singapore':      [1.296472, 103.852962],
+    }
+
+    // set up leaflet
+    var map = L.map('map', {zoomControl: false}).setView(latlngs.Bangalore, 13);
+    L.tileLayer('http://{s}.tiles.mapbox.com/v3/kuanb.ipfm8n84/{z}/{x}/{y}.png', {
+        attribution: 'Map data <a href="http://openstreetmap.org">OpenStreetMap</a>, Imagery <a href="http://mapbox.com">Mapbox</a>',
+        maxZoom: 18,
+        opacity: 0.5,
+    }).addTo(map);
 
     $('#city_list li').on('click', function(){
         var chosen = $(this).text();
@@ -119,6 +165,7 @@
         $('#loader').show();
         setTimeout( function () {
             $('#diagram').empty();
+            map.panTo(new L.LatLng(latlngs[city][0], latlngs[city][1]));
             // run update
             createHex(city);
             setTimeout( function () {
