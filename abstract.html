@@ -24,6 +24,14 @@
             zoom: 10;
             -moz-transform: scale(3);
         }
+        #city_name {
+            position: absolute;
+            padding: 25px 50px 25px 50px;
+            color: white;
+        }
+        #city_name h1 {
+            font-weight: 700;
+        }
         #all {
             height: 100vh;
         }
@@ -45,6 +53,10 @@
 <div class="row" id="all">
     
     <div class="col-sm-6">
+        <div id="city_name">
+            <h1>Bangalore</h1>
+        </div>
+
         <div id="diagram">
         </div>
         <div class="preloader loading" id="loader">
@@ -111,6 +123,7 @@
             createHex(city);
             setTimeout( function () {
                 // final action
+                $('#city_name h1').text(city)
                 $('#loader').fadeOut();  
             }, 500)
         }, 500)
