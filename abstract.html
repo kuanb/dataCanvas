@@ -6,6 +6,7 @@
     <title>Example 02.05 - Custom geometry</title>
 
     <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="new_weather.css"> <!-- CodePen source: http://codepen.io/weaintplastic/pen/qEMZbx -->
 
     <style>
         html, body{
@@ -14,7 +15,14 @@
             width: 100%;
             overflow: hidden;
             font-family: 'Open Sans', sans-serif;
-            font-size: 30px;
+            font-size: 10px;
+        }
+        #loader {
+            display: none;
+            position: fixed;
+            left: 25%;
+            zoom: 10;
+            -moz-transform: scale(3);
         }
         #all {
             height: 100vh;
@@ -24,6 +32,7 @@
             padding: 25px 50px 25px 25px;
             color: #5AC2E7;
             background-color: #FFF;
+            box-shadow: 15px 15px 15px 15px rgba(0,0,0,0.25);
         }
         svg:hover path {
             fill: #282828 !important;
@@ -35,13 +44,24 @@
 
 <div class="row" id="all">
     
-    <div class="col-sm-6" id="diagram">
+    <div class="col-sm-6">
+        <div id="diagram">
+        </div>
+        <div class="preloader loading" id="loader">
+            <span class="slice"></span>
+            <span class="slice"></span>
+            <span class="slice"></span>
+            <span class="slice"></span>
+            <span class="slice"></span>
+            <span class="slice"></span>
+        </div>
     </div>
     
     <div class="col-sm-6" id="info">
         <div class="row">
             <div class="col-sm-12">
-                <h1>Explore Data Canvas' cities.</h1>
+                <h2>Checking the weather in a "Smart City."</h2>
+                <h4>Explore results from Data Canvas' other cities.</h4>
                 <div class="input-group">
                     <div class="input-group-btn">
                         <div class="btn-group">
@@ -71,7 +91,6 @@
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 
-<!-- Javascript code that runs our Three.js examples -->
 <script type="text/javascript">
     // globals
     var original_temp;
@@ -80,12 +99,24 @@
     $('#city_list li').on('click', function(){
         var chosen = $(this).text();
         $('#city_selected').val(chosen);
-        createHex(chosen);
+        updateHex(chosen);
     });
 
+    updateHex = function(city) {
+        // initial action
+        $('#loader').show();
+        setTimeout( function () {
+            $('#diagram').empty();
+            // run update
+            createHex(city);
+            setTimeout( function () {
+                // final action
+                $('#loader').fadeOut();  
+            }, 500)
+        }, 500)
+    }
 
     createHex = function(city) {
-        $('#diagram').empty()
         // date information
         var now = new Date();
         var year = now.getFullYear(),
@@ -253,7 +284,6 @@
             $('#subtitle')[0].innerHTML = original_desc;
         }
     }
-
 
     createHex('Bangalore');
 
