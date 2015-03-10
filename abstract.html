@@ -256,7 +256,7 @@
 
             // Get the weather
             var weather_url = "http://api.openweathermap.org/data/2.5/weather?q=" + city
-            $.ajax({url: weather_url})
+            $.ajax({ url: weather_url, dataType: 'jsonp', })
             .success( function(data) {
                 // set globals
                 original_temp = Math.round( data.main.temp - 273.15 );
