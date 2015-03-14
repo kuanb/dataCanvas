@@ -577,7 +577,7 @@
                     var names = ['temperature','airquality_raw','sound','humidity','dust','light','temperature'];
                     // now add circles for each edge
                     for (var corner = 0; corner < pointData.length; corner++) {
-                        var corner_name = names[corner]
+                        var corner_name = names[corner];
                         svgContainer.selectAll("path.area")
                             .data([[]]).enter().append("circle")
                             .attr("id", corner_name)
@@ -597,6 +597,29 @@
                                 }
                             })
                     }
+                    // Add the SVG Text Element to the svgContainer
+                    svgContainer.selectAll("path.area")
+                        .data([[]]).enter().append("text")
+                        .attr("id", "title")
+                        .attr("x", $(window).width()/4)
+                        .attr("y", $(window).height()/2 + 20)
+                        .attr("text-anchor", "middle")
+                        .text( Math.round(each.temperature) )
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "100px")
+                        .attr("fill", "white")
+                    svgContainer.selectAll("path.area")
+                        .data([[]]).enter().append("text")
+                        .attr("id", "subtitle")
+                        .attr("x", $(window).width()/4)
+                        .attr("y", $(window).height()/2 + 50)
+                        .attr("text-anchor", "middle")
+                        .text( "temperature" )
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "20px")
+                        .attr("fill", "white")
+                    original_temp = Math.round(each.temperature);
+                    original_desc = "temperature";
                 }
             };
 
@@ -607,28 +630,6 @@
                 // set globals
                 original_temp = Math.round( data.main.temp - 273.15 );
                 original_desc = data.weather[0].description;
-
-                // Add the SVG Text Element to the svgContainer
-                svgContainer.selectAll("path.area")
-                    .data([[]]).enter().append("text")
-                    .attr("id", "title")
-                    .attr("x", $(window).width()/4)
-                    .attr("y", $(window).height()/2 + 20)
-                    .attr("text-anchor", "middle")
-                    .text( original_temp )
-                    .attr("font-family", "sans-serif")
-                    .attr("font-size", "100px")
-                    .attr("fill", "white")
-                svgContainer.selectAll("path.area")
-                    .data([[]]).enter().append("text")
-                    .attr("id", "subtitle")
-                    .attr("x", $(window).width()/4)
-                    .attr("y", $(window).height()/2 + 50)
-                    .attr("text-anchor", "middle")
-                    .text( original_desc )
-                    .attr("font-family", "sans-serif")
-                    .attr("font-size", "20px")
-                    .attr("fill", "white")
             })
         });
     }
