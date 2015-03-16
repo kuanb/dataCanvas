@@ -65,6 +65,9 @@
         svg:hover path#hex_layers {
             fill: #282828 !important;
         }
+        svg:hover path#hex_arrows {
+            fill: #282828 !important;
+        }
     </style>
 
 </head>
@@ -578,6 +581,48 @@
                     // now add circles for each edge
                     for (var corner = 0; corner < pointData.length; corner++) {
                         var corner_name = names[corner];
+
+                        var endpoint_x, endpoint_y;
+                        var x_ratio = (pointData[corner][0]-xDiff)/(pointData[corner][1]-yDiff);
+                        var y_ratio = (pointData[corner][1]-yDiff)/(pointData[corner][0]-xDiff);
+
+                        if (pointData[corner][1]-yDiff == 0) {
+                            x_ratio = 1;
+                            y_ratio = 0;
+                        }
+
+                        if (pointData[corner][0] >= xDiff && pointData[corner][1] >= yDiff) {
+                            endpoint_x = pointData[corner][0]+(x_ratio*25);
+                            endpoint_y = pointData[corner][1]+(y_ratio*25);
+                        }
+                        if (pointData[corner][0] <= xDiff && pointData[corner][1] <= yDiff) {
+                            endpoint_x = pointData[corner][0]-(x_ratio*25);
+                            endpoint_y = pointData[corner][1]-(y_ratio*25);
+                        }
+                        if (pointData[corner][0] > xDiff && pointData[corner][1] < yDiff) {
+                            endpoint_x = pointData[corner][0]-(x_ratio*25);
+                            endpoint_y = pointData[corner][1]+(y_ratio*25);
+                        }
+                        if (pointData[corner][0] < xDiff && pointData[corner][1] > yDiff) {
+                            endpoint_x = pointData[corner][0]+(x_ratio*25);
+                            endpoint_y = pointData[corner][1]-(y_ratio*25);
+                        }
+
+                        var branch = [ [pointData[corner][0], pointData[corner][1] ],
+                                     [ endpoint_x, endpoint_y ]
+                        ];
+
+                        svgContainer.selectAll("path.area") //draw elements
+                            .data([branch]).enter().append("path")
+                            .style("fill", "#FFFFFF")
+                            .style("fill-opacity", 0.05)
+                            .style("stroke", "#FFFFFF")
+                            .style("stroke-width", "1px")
+                            .attr("d", d3.svg.line())
+                            .attr("id", "hex_arrows");
+                            .attr("hidden", "");
+
+
                         svgContainer.selectAll("path.area")
                             .data([[]]).enter().append("circle")
                             .attr("id", corner_name)
