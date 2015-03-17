@@ -592,19 +592,19 @@
                         }
 
                         if (pointData[corner][0] >= xDiff && pointData[corner][1] >= yDiff) {
-                            endpoint_x = pointData[corner][0]+(x_ratio*25);
+                            endpoint_x = pointData[corner][0]+(x_ratio*35);
                             endpoint_y = pointData[corner][1]+(y_ratio*25);
                         }
                         if (pointData[corner][0] <= xDiff && pointData[corner][1] <= yDiff) {
-                            endpoint_x = pointData[corner][0]-(x_ratio*25);
+                            endpoint_x = pointData[corner][0]-(x_ratio*35);
                             endpoint_y = pointData[corner][1]-(y_ratio*25);
                         }
                         if (pointData[corner][0] > xDiff && pointData[corner][1] < yDiff) {
-                            endpoint_x = pointData[corner][0]-(x_ratio*25);
+                            endpoint_x = pointData[corner][0]-(x_ratio*35);
                             endpoint_y = pointData[corner][1]+(y_ratio*25);
                         }
                         if (pointData[corner][0] < xDiff && pointData[corner][1] > yDiff) {
-                            endpoint_x = pointData[corner][0]+(x_ratio*25);
+                            endpoint_x = pointData[corner][0]+(x_ratio*35);
                             endpoint_y = pointData[corner][1]-(y_ratio*25);
                         }
 
@@ -620,7 +620,7 @@
                             .style("stroke-width", "1px")
                             .attr("d", d3.svg.line())
                             .attr("id", "hex_arrows");
-                            .attr("hidden", "");
+                            // .attr("hidden", "");
 
 
                         svgContainer.selectAll("path.area")
