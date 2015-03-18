@@ -62,11 +62,14 @@
         svg path {
             transition: fill 1s ease;
         }
-        svg:hover path#hex_layers {
+        svg:hover path.hex_layers {
             fill: #282828 !important;
         }
-        svg:hover path#hex_arrows {
-            fill: #282828 !important;
+        svg:hover path.hex_arrows {
+            stroke-width: 1px !important;
+        }
+        svg:hover path.hex_arrow_labels {
+            visibility: visible;
         }
     </style>
 
@@ -571,7 +574,7 @@
                     .style("stroke", "#FFFFFF")
                     .style("stroke-width", "0.15px")
                     .attr("d", d3.svg.line())
-                    .attr("id", "hex_layers");
+                    .attr("class", "hex_layers");
 
                 if (i < 1) {
                     enterElement.style("stroke", "#FFFFFF")
@@ -608,20 +611,29 @@
                             endpoint_y = pointData[corner][1]-(y_ratio*25);
                         }
 
-                        var branch = [ [pointData[corner][0], pointData[corner][1] ],
-                                     [ endpoint_x, endpoint_y ]
+                        var branch = [ 
+                            [ pointData[corner][0], pointData[corner][1] ],
+                            [ endpoint_x, endpoint_y ]
                         ];
 
-                        svgContainer.selectAll("path.area") //draw elements
+                        svgContainer.selectAll("path.area")
                             .data([branch]).enter().append("path")
                             .style("fill", "#FFFFFF")
                             .style("fill-opacity", 0.05)
                             .style("stroke", "#FFFFFF")
-                            .style("stroke-width", "1px")
+                            .style("stroke-width", "0px")
                             .attr("d", d3.svg.line())
-                            .attr("id", "hex_arrows");
-                            // .attr("hidden", "");
+                            .attr("class", "hex_arrows");
 
+                        svgContainer.selectAll("path.area")
+                            .data([[]]).enter().append("text")
+                            .attr("id", corner_name + "text")
+                            .attr("x", endpoint_x )
+                            .attr("y", endpoint_y )
+                            .attr("class", "hex_arrow_labels")
+                            .style("text-anchor", "middle")
+                            .style("fill", "#fff")
+                            .text( function () { return corner_name });
 
                         svgContainer.selectAll("path.area")
                             .data([[]]).enter().append("circle")
@@ -640,7 +652,7 @@
                                 mouseleave: function() {
                                     toggleInfo()
                                 }
-                            })
+                            });
                     }
                     // Add the SVG Text Element to the svgContainer
                     svgContainer.selectAll("path.area")
