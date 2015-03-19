@@ -137,6 +137,7 @@
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script src="src/leaflet-heat.js"></script>
 
 <script type="text/javascript">
     // globals
@@ -159,6 +160,7 @@
         maxZoom: 18,
         opacity: 0.5,
     }).addTo(map);
+    var heat = L.heatLayer();
 
     all_sensors = {
         'San Francisco': {
@@ -433,11 +435,12 @@
             },
         },
     }
+    var selectedCity = "Bangalore";
 
     // add markers to leaflet
     var all_sensor_locations = {};
-    for (sensor in all_sensors) {
-        for (sensorID in all_sensors[sensor]) {
+    for (var sensor in all_sensors) {
+        for (var sensorID in all_sensors[sensor]) {
             var sensorURL = "http://sensor-api.localdata.com/api/v1/sources/" + all_sensors[sensor][sensorID]['id'] + "/entries?" +
                 "from=2015-03-05T00:00:00-0800" + 
                 "&before=2015-03-10T00:00:00-0800";
@@ -445,6 +448,7 @@
             .success( function(data) {
                 if (data.data.length > 0) {
                     var location = data.data[0]['data']['location'];
+
                     var lat = location[1];
                     var lng = location[0];
                     var circle = L.circle([lat, lng], 250, {
@@ -452,25 +456,37 @@
                         fillColor: '#5AC2E7',
                         fillOpacity: 0.5,
                     }).addTo(map);
-                    all_sensors[sensor][sensorID]['location'] = { 'lat': lat, 'lng': lng }
+                    var loc = { 'lat': lat, 'lng': lng };
+                    var source = data.data[0]['source'];
+                    for (var city in all_sensors){
+                        for (var sensNAME in all_sensors[city]){
+                            if(all_sensors[city][sensNAME].id == source){
+                                all_sensors[city][sensNAME]['location'] = loc; 
+                            }
+                        }
+                    }
                 }
             });
         }
     }
 
+
+
     $('#city_list li').on('click', function(){
         var chosen = $(this).text();
         $('#city_selected').val(chosen);
-        updateHex(chosen);
+        updateData(chosen);
     });
 
-    updateHex = function(city) {
+    updateData = function(city) {
+        selectedCity = city;
         // initial action
         $('#loader').show();
         setTimeout( function () {
             $('#diagram').empty();
             map.panTo(new L.LatLng(latlngs[city][0], latlngs[city][1]));
             // run update
+            getDataForHeatmap(city);
             createHex(city);
             setTimeout( function () {
                 // final action
@@ -480,16 +496,68 @@
         }, 500)
     }
 
+    getDataForHeatmap = function(city){
+        // date information
+        var now = new Date();
+        var year = now.getUTCFullYear(),
+            month = now.getUTCMonth() + 1,
+            day = now.getUTCDate(),
+            hour = now.getUTCHours(),
+            minute = now.getUTCMinutes(),
+            from_minute = (minute < 5) ? 59 + minute - 4 : minute - 5;
+
+        // clean up date figures
+        if (month < 10) { month = "0" + String(month)};
+        if (day < 10) { day = "0" + String(day)};   
+        if (hour < 10) { hour = "0" + String(hour)};
+        if (minute < 10) { minute = "0" + String(minute)};
+        if(from_minute < 10) { from_minute = "0" + String(from_minute)};
+
+        var from_date   = year + '-' + month + '-' + day + 'T' + hour + ':' + from_minute + ':00.000Z'; 
+        var before_date = year + '-' + month + '-' + day + 'T' + hour + ':' + minute + ':00.000Z';
+        var from = from_date,
+            before = before_date,
+            resolution = '5m',
+            fields = ['temperature','light','airquality_raw','sound','humidity','dust'].join(),
+            sensorIDs = [];
+            for (var sensor in all_sensors[city]) {
+                sensorIDs.push(all_sensors[city][sensor]["id"]);
+            };
+            sensorIDsString = sensorIDs.join();
+        url = 'http://sensor-api.localdata.com/api/v1/aggregations?each.sources=' +sensorIDsString + '&from=' + from + '&before=' + before + '&resolution=' + resolution + '&fields=' + fields + '&op=mean';
+        $.ajax({url: url})
+        .success( function(data) {
+            var dataArray = data;
+            for (var i = 0; i < dataArray.data.length; i++) {
+                var each = dataArray.data[i];
+                var source = each.source;
+                for (var sensor in all_sensors[city]) {
+                    if(all_sensors[city][sensor]["id"] == source){
+                        all_sensors[city][sensor]['temperature'] = each.temperature;
+                        all_sensors[city][sensor]['light'] = each.light;
+                        all_sensors[city][sensor]['airquality_raw'] = each.airquality_raw;
+                        all_sensors[city][sensor]['sound'] = each.sound;
+                        all_sensors[city][sensor]['humidity'] = each.humidity;
+                        all_sensors[city][sensor]['dust'] = each.dust;
+                    }
+                };
+            }
+        });
+    }
+
+
+
+
     createHex = function(city) {
         // date information
         var now = new Date();
-        var year = now.getFullYear(),
-            month = now.getMonth() + 1,
-            from_day = now.getDate() - 1,
-            day = now.getDate(),
-            hour = now.getHours(),
-            minute = now.getMinutes(),
-            milliseconds = now.getMilliseconds();
+        var year = now.getUTCFullYear(),
+            month = now.getUTCMonth() + 1,
+            from_day = now.getUTCDate() - 1,
+            day = now.getUTCDate(),
+            hour = now.getUTCHours(),
+            minute = now.getUTCMinutes(),
+            milliseconds = now.getUTCMilliseconds();
 
         // clean up date figures
         if (month < 10) { month = "0" + String(month)};
@@ -499,16 +567,13 @@
         if (minute < 10) { minute = "0" + String(minute)};
         if (milliseconds < 1000) { milliseconds = "0" + String(milliseconds)};
 
-        var from_date   = year + '-' + month + '-' + from_day + 'T' + hour + ':00:00-0800'; 
-        var before_date = year + '-' + month + '-' + day + 'T' + hour + ':00:00-0800';
-
-
+        var from_date   = year + '-' + month + '-' + from_day + 'T' + hour + ':00:00.000Z'; 
+        var before_date = year + '-' + month + '-' + day + 'T' + hour + ':00:00.000Z';
         var from = from_date,
             before = before_date,
             resolution = '1h',
             fields = ['temperature','light','airquality_raw','sound','humidity','dust'].join(),
             url = 'http://sensor-api.localdata.com/api/v1/aggregations?op=mean&over.city=' + city + '&from=' + from + '&before=' + before + '&resolution=' + resolution + '&fields=' + fields;
-
         $.ajax({url: url})
         .success( function(data) {
             var dataArray = data;
@@ -691,18 +756,48 @@
         });
     }
 
+    toggleHeatMap = function(dataId){
+        if(dataId){
+            var dataPoints = [];
+            for (var sensor in all_sensors[selectedCity]){
+                if(all_sensors[selectedCity][sensor].hasOwnProperty("location")){
+                    var lat = all_sensors[selectedCity][sensor]["location"]["lat"];
+                    var lng = all_sensors[selectedCity][sensor]["location"]["lng"];
+                    if(all_sensors[selectedCity][sensor].hasOwnProperty(dataId)){
+                        var data = all_sensors[selectedCity][sensor][dataId];
+                        var each = [];
+                        each.push(lat);
+                        each.push(lng);
+                        each.push(data);
+                        dataPoints.push(each);
+                    }
+                }
+            }
+            heat = L.heatLayer(dataPoints,{
+                radius: 100,
+                blur: 20, 
+            }).addTo(map);
+        } else {
+            map.removeLayer(heat);
+        }
+    }
+
     toggleInfo = function(elem, data) {
         if (elem) {
             $('#title')[0].innerHTML = Math.round(data[elem.id]);
             $('#subtitle')[0].innerHTML = elem.id;
+            toggleHeatMap(elem.id);
         }
         else {
             $('#title')[0].innerHTML = original_temp;
             $('#subtitle')[0].innerHTML = original_desc;
+            toggleHeatMap();
         }
     }
 
-    createHex('Bangalore');
+    // Preloading heatmap data for faster firs rendering.
+    getDataForHeatmap(selectedCity);
+    createHex(selectedCity);
 
 </script>
 </body>
