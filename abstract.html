@@ -137,6 +137,7 @@
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script src="src/leaflet-heat.js"></script>
 
 <script type="text/javascript">
     // globals
@@ -159,6 +160,7 @@
         maxZoom: 18,
         opacity: 0.5,
     }).addTo(map);
+    var heat = L.heatLayer();
 
     all_sensors = {
         'San Francisco': {
@@ -433,6 +435,7 @@
             },
         },
     }
+    var selectedCity = "Bangalore";
 
     // add markers to leaflet
     var all_sensor_locations = {};
@@ -472,16 +475,17 @@
     $('#city_list li').on('click', function(){
         var chosen = $(this).text();
         $('#city_selected').val(chosen);
-        updateHex(chosen);
+        updateData(chosen);
     });
 
-    updateHex = function(city) {
+    updateData = function(city) {
         // initial action
         $('#loader').show();
         setTimeout( function () {
             $('#diagram').empty();
             map.panTo(new L.LatLng(latlngs[city][0], latlngs[city][1]));
             // run update
+            getDataForHeatmap(city);
             createHex(city);
             setTimeout( function () {
                 // final action
@@ -506,11 +510,10 @@
         if (day < 10) { day = "0" + String(day)};   
         if (hour < 10) { hour = "0" + String(hour)};
         if (minute < 10) { minute = "0" + String(minute)};
-        if(from_minute < 10) { minute = "0" + String(from_minute)};
+        if(from_minute < 10) { from_minute = "0" + String(from_minute)};
 
         var from_date   = year + '-' + month + '-' + day + 'T' + hour + ':' + from_minute + ':00.000Z'; 
         var before_date = year + '-' + month + '-' + day + 'T' + hour + ':' + minute + ':00.000Z';
-
         var from = from_date,
             before = before_date,
             resolution = '5m',
@@ -752,20 +755,49 @@
         });
     }
 
+    toggleHeatMap = function(dataId){
+        if(dataId){
+            var dataPoints = [];
+            for (var sensor in all_sensors[selectedCity]){
+                console.log(JSON.stringify(all_sensors[selectedCity][sensor]));
+                if(all_sensors[selectedCity][sensor].hasOwnProperty("location")){
+                    var lat = all_sensors[selectedCity][sensor]["location"]["lat"];
+                    var lng = all_sensors[selectedCity][sensor]["location"]["lng"];
+                    if(all_sensors[selectedCity][sensor].hasOwnProperty(dataId)){
+                        var data = all_sensors[selectedCity][sensor][dataId];
+                        var each = [];
+                        each.push(lat);
+                        each.push(lng);
+                        each.push(data);
+                        dataPoints.push(each);
+                    }
+                }
+            }
+            heat = L.heatLayer(dataPoints,{
+                radius: 40,
+                blur: 15, 
+            }).addTo(map);
+        } else {
+            map.removeLayer(heat);
+        }
+    }
+
     toggleInfo = function(elem, data) {
         if (elem) {
             $('#title')[0].innerHTML = Math.round(data[elem.id]);
             $('#subtitle')[0].innerHTML = elem.id;
+            toggleHeatMap(elem.id);
         }
         else {
             $('#title')[0].innerHTML = original_temp;
             $('#subtitle')[0].innerHTML = original_desc;
+            toggleHeatMap();
         }
     }
 
     // Preloading heatmap data for faster firs rendering.
-    getDataForHeatmap('Bangalore');
-    createHex('Bangalore');
+    getDataForHeatmap(selectedCity);
+    createHex(selectedCity);
 
 </script>
 </body>
