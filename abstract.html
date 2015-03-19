@@ -479,6 +479,7 @@
     });
 
     updateData = function(city) {
+        selectedCity = city;
         // initial action
         $('#loader').show();
         setTimeout( function () {
@@ -759,7 +760,6 @@
         if(dataId){
             var dataPoints = [];
             for (var sensor in all_sensors[selectedCity]){
-                console.log(JSON.stringify(all_sensors[selectedCity][sensor]));
                 if(all_sensors[selectedCity][sensor].hasOwnProperty("location")){
                     var lat = all_sensors[selectedCity][sensor]["location"]["lat"];
                     var lng = all_sensors[selectedCity][sensor]["location"]["lng"];
@@ -774,8 +774,8 @@
                 }
             }
             heat = L.heatLayer(dataPoints,{
-                radius: 40,
-                blur: 15, 
+                radius: 100,
+                blur: 20, 
             }).addTo(map);
         } else {
             map.removeLayer(heat);
