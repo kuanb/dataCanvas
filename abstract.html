@@ -480,16 +480,75 @@
         }, 500)
     }
 
+    getDataForHeatmap = function(city){
+        // date information
+        var now = new Date();
+        var year = now.getUTCFullYear(),
+            month = now.getUTCMonth() + 1,
+            day = now.getUTCDate(),
+            hour = now.getUTCHours(),
+            minute = now.getUTCMinutes(),
+            from_minute = (minute == 2) ? 59 : minute -3;
+
+        // clean up date figures
+        if (month < 10) { month = "0" + String(month)};
+        if (day < 10) { day = "0" + String(day)};   
+        if (hour < 10) { hour = "0" + String(hour)};
+        if (minute < 10) { minute = "0" + String(minute)};
+        if(from_minute < 10) { minute = "0" + String(from_minute)};
+
+        var from_date   = year + '-' + month + '-' + day + 'T' + hour + ':' + from_minute + ':00.000Z'; 
+        var before_date = year + '-' + month + '-' + day + 'T' + hour + ':' + minute + ':00.000Z';
+
+        var from = from_date,
+            before = before_date,
+            resolution = '5m',
+            fields = ['temperature','light','airquality_raw','sound','humidity','dust'].join(),
+            sensorIDs = [];
+            for (var sensor in all_sensors[city]) {
+                sensorIDs.push(all_sensors[city][sensor]["id"]);
+            };
+            sensorIDs = sensorIDs.join();
+        url = 'http://sensor-api.localdata.com/api/v1/aggregations?each.sources=' + sensorIDs + '&from=' + from + '&before=' + before + '&resolution=' + resolution + '&fields=' + fields + '&op=mean';
+        $.ajax({url: url})
+        .success( function(data) {
+            console.log(JSON.stringify(data));
+            var dataArray = data;
+            var ratios = {
+                    temp:  { val: 1, arr: [], },
+                    light: { val: 1, arr: [], },
+                    air:   { val: 1, arr: [], },
+                    sound: { val: 1, arr: [], },
+                    humid: { val: 1, arr: [], },
+                    dust:  { val: 1, arr: [], },
+                };
+
+            for (var i = 0; i < dataArray.data.length; i++) {
+                var each     = dataArray.data[i];
+                ratios.temp.arr.push(each.temperature); 
+                ratios.light.arr.push(each.light); 
+                ratios.air.arr.push(each.airquality_raw);
+                ratios.sound.arr.push(each.sound);
+                ratios.humid.arr.push(each.humidity);
+                ratios.dust.arr.push(each.dust);
+            }
+
+        });
+    }
+
+
+
+
     createHex = function(city) {
         // date information
         var now = new Date();
-        var year = now.getFullYear(),
-            month = now.getMonth() + 1,
-            from_day = now.getDate() - 1,
-            day = now.getDate(),
-            hour = now.getHours(),
-            minute = now.getMinutes(),
-            milliseconds = now.getMilliseconds();
+        var year = now.getUTCFullYear(),
+            month = now.getUTCMonth(),
+            from_day = now.getUTCDate() - 1,
+            day = now.getUTCDate(),
+            hour = now.getUTCHours(),
+            minute = now.getUTCMinutes(),
+            milliseconds = now.getUTCMilliseconds();
 
         // clean up date figures
         if (month < 10) { month = "0" + String(month)};
@@ -499,16 +558,13 @@
         if (minute < 10) { minute = "0" + String(minute)};
         if (milliseconds < 1000) { milliseconds = "0" + String(milliseconds)};
 
-        var from_date   = year + '-' + month + '-' + from_day + 'T' + hour + ':00:00-0800'; 
-        var before_date = year + '-' + month + '-' + day + 'T' + hour + ':00:00-0800';
-
-
+        var from_date   = year + '-' + month + '-' + from_day + 'T' + hour + ':00:00.000Z'; 
+        var before_date = year + '-' + month + '-' + day + 'T' + hour + ':00:00.000Z';
         var from = from_date,
             before = before_date,
             resolution = '1h',
             fields = ['temperature','light','airquality_raw','sound','humidity','dust'].join(),
             url = 'http://sensor-api.localdata.com/api/v1/aggregations?op=mean&over.city=' + city + '&from=' + from + '&before=' + before + '&resolution=' + resolution + '&fields=' + fields;
-
         $.ajax({url: url})
         .success( function(data) {
             var dataArray = data;
@@ -702,6 +758,8 @@
         }
     }
 
+    // Preloading heatmap data for faster firs rendering.
+    getDataForHeatmap('Singapore');
     createHex('Bangalore');
 
 </script>
