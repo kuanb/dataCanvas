@@ -864,6 +864,7 @@
     toggleChart = function(measure) {
         if (measure) {
             $('.ct-chart').fadeTo( 500, 1 );
+            $('#chart_title').fadeTo( 500, 1 );
             var data = {
                     labels: base_graph[measure],
                     series: [ base_graph[measure] ]
@@ -901,6 +902,7 @@
         }
         else {
             $('.ct-chart').fadeTo( 500, 0.0 );
+            $('#chart_title').fadeTo( 500, 0.0 );
             setTimeout(function(){ $('.ct-chart').empty(); }, 500);
         }      
     }
