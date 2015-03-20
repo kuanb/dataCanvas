@@ -59,6 +59,10 @@
             background-color: #FFF;
             box-shadow: 15px 15px 15px 15px rgba(0,0,0,0.25);
         }
+        .leaflet-heatmap-layer {
+            transition: visible 1s ease;
+            opacity: 0;
+        }
         svg path {
             transition: fill 1s ease;
         }
@@ -66,10 +70,12 @@
             fill: #282828 !important;
         }
         svg:hover path.hex_arrows {
+            transition: stroke-width 1s ease;
             stroke-width: 1px !important;
         }
-        svg:hover path.hex_arrow_labels {
-            visibility: visible;
+        svg:hover text.hex_arrow_labels {
+            transition: fill 1s ease;
+            fill: rgba(255,255,255,0.8) !important;
         }
     </style>
 
@@ -683,22 +689,40 @@
 
                         svgContainer.selectAll("path.area")
                             .data([branch]).enter().append("path")
+                            .attr("d", d3.svg.line())
+                            .attr("class", "hex_arrows")
+                            .attr("id", corner_name)
                             .style("fill", "#FFFFFF")
                             .style("fill-opacity", 0.05)
                             .style("stroke", "#FFFFFF")
                             .style("stroke-width", "0px")
-                            .attr("d", d3.svg.line())
-                            .attr("class", "hex_arrows");
+                            .on({
+                                mouseenter: function() {
+                                    toggleInfo(this, each)
+                                },
+                                mouseleave: function() {
+                                    toggleInfo()
+                                }
+                            });
 
                         svgContainer.selectAll("path.area")
                             .data([[]]).enter().append("text")
-                            .attr("id", corner_name + "text")
+                            .text( function () { return corner_name })
                             .attr("x", endpoint_x )
                             .attr("y", endpoint_y )
+                            .attr("id", corner_name)
                             .attr("class", "hex_arrow_labels")
                             .style("text-anchor", "middle")
-                            .style("fill", "#fff")
-                            .text( function () { return corner_name });
+                            .style("fill", "rgba(255,255,255,0)")
+                            .style("cursor", "default")
+                            .on({
+                                mouseenter: function() {
+                                    toggleInfo(this, each)
+                                },
+                                mouseleave: function() {
+                                    toggleInfo()
+                                }
+                            });
 
                         svgContainer.selectAll("path.area")
                             .data([[]]).enter().append("circle")
@@ -710,6 +734,7 @@
                             .style("fill-opacity", 0.5)
                             .style("stroke", "#FFFFFF")
                             .style("stroke-width", "2px")
+                            .attr("class", "sensors")
                             .on({
                                 mouseenter: function() {
                                     toggleInfo(this, each)
@@ -777,8 +802,10 @@
                 radius: 100,
                 blur: 20, 
             }).addTo(map);
+            $('.leaflet-heatmap-layer').fadeTo( 500, 0.25 );
         } else {
-            map.removeLayer(heat);
+            $('.leaflet-heatmap-layer').fadeTo( 500, 0.0 );
+            setTimeout(function(){ map.removeLayer(heat); }, 500);
         }
     }
 
@@ -795,7 +822,7 @@
         }
     }
 
-    // Preloading heatmap data for faster firs rendering.
+    // Preloading heatmap data for faster first rendering.
     getDataForHeatmap(selectedCity);
     createHex(selectedCity);
 
