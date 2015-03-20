@@ -6,7 +6,8 @@
     <title>Data Canvas Entry - Kuan</title>
 
     <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="new_weather.css"> <!-- CodePen source: http://codepen.io/weaintplastic/pen/qEMZbx -->
+    <link rel="stylesheet" type="text/css" href="css/new_weather.css"> <!-- CodePen source: http://codepen.io/weaintplastic/pen/qEMZbx -->
+    <link rel="stylesheet" type="text/css" href="css/chartist.css">
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" /> <!-- Leaflet -->
 
     <style>
@@ -17,6 +18,31 @@
             overflow: hidden;
             font-family: 'Open Sans', sans-serif;
             font-size: 10px;
+        }
+        #diagram {
+        }
+        #loader {
+            display: none;
+            position: fixed;
+            left: 25%;
+            zoom: 10;
+            -moz-transform: scale(3);
+        }
+        #chart {
+            position: absolute;
+            width: 100%;
+            bottom: 0px;
+            pointer-events: none;
+            padding: 0px 0px 0px 0px;
+            margin: 0px -15px -35px -45px;
+        }
+        #chart_title {
+            transition: 1s ease;
+            position: fixed;
+            left: 50px;
+            bottom: 25px;
+            font-size: 16px;
+            color: rgba(255,255,255,0.5);
         }
         #map { 
             position:fixed;
@@ -33,13 +59,6 @@
             background: -o-linear-gradient(     top,    rgba(255,255,255,0), rgba(255,255,255,0.6), rgba(255,255,255,1)); /* For Opera 11.1 to 12.0 */
             background: -moz-linear-gradient(   top,    rgba(255,255,255,0), rgba(255,255,255,0.6), rgba(255,255,255,1)); /* For Firefox 3.6 to 15 */
             background: linear-gradient(to      top,    rgba(255,255,255,0), rgba(255,255,255,0.6), rgba(255,255,255,1)); /* Standard syntax (must be last) */
-        }
-        #loader {
-            display: none;
-            position: fixed;
-            left: 25%;
-            zoom: 10;
-            -moz-transform: scale(3);
         }
         #city_name {
             position: absolute;
@@ -63,6 +82,14 @@
             transition: visible 1s ease;
             opacity: 0;
         }
+        .ct-area {
+            fill: #FFF !important;
+        }
+        .ct-line {
+            stroke: #FFF !important;
+            stroke-width: 2px !important;
+            opacity: 0.5;
+        }
         svg path {
             transition: fill 1s ease;
         }
@@ -84,13 +111,11 @@
 
 <div class="row" id="all">
     
-    <div class="col-sm-6">
+    <div class="col-sm-6" id="blue_side">
         <div id="city_name">
             <h1>Bangalore</h1>
         </div>
-
-        <div id="diagram">
-        </div>
+        <div id="diagram"></div>
         <div class="preloader loading" id="loader">
             <span class="slice"></span>
             <span class="slice"></span>
@@ -98,6 +123,10 @@
             <span class="slice"></span>
             <span class="slice"></span>
             <span class="slice"></span>
+        </div>
+        <div id="chart_title">24 hour backcast</div>
+        <div id="chart">
+            <div class="ct-chart"></div>
         </div>
     </div>
     
@@ -143,7 +172,8 @@
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-<script src="src/leaflet-heat.js"></script>
+<script src="js/leaflet-heat.js"></script>
+<script src="js/chartist.js"></script>
 
 <script type="text/javascript">
     // globals
@@ -614,8 +644,26 @@
                 ratios[attr].val = 100/(sum / ratios[attr].arr.length);
             };
 
+            // global var
+            base_graph = {
+                'temperature':    [],
+                'light':          [],
+                'airquality_raw': [],
+                'sound':          [],
+                'humidity':       [],
+                'dust':           [],
+            }
+
             for (var i = dataArray.data.length-1; i >= 0 ; i--) {
                 var each     = dataArray.data[i];
+
+                base_graph['temperature'].push(each.temperature);
+                base_graph['light'].push(each.light);
+                base_graph['airquality_raw'].push(each.airquality_raw);
+                base_graph['sound'].push(each.sound);
+                base_graph['humidity'].push(each.humidity);
+                base_graph['dust'].push(each.dust);
+
                 var temp     = Math.min(200, each.temperature     *ratios.temp.val  + 50),
                     light    = Math.min(200, each.light           *ratios.light.val + 50),
                     air      = Math.min(200, each.airquality_raw  *ratios.air.val   + 50),
@@ -809,16 +857,62 @@
         }
     }
 
+    toggleChart = function(measure) {
+        if (measure) {
+            $('.ct-chart').fadeTo( 500, 1 );
+            var data = {
+                    labels: base_graph[measure],
+                    series: [ base_graph[measure] ]
+                };
+            var options = {
+                width:  $('#blue_side').width() + 70,
+                height: 200,
+                low: 0,
+                showArea: true,
+                lineSmooth: false,
+                showPoint: false,
+                fullWidth: true,
+                axisX: {
+                    showGrid: false,
+                    showLabel: false
+                },
+                axisY: {
+                    showGrid: false,
+                    showLabel: false
+                }
+            };
+            var chart = new Chartist.Line('.ct-chart', data, options);
+            chart.on('draw', function(data) {
+              if(data.type === 'line' || data.type === 'area') {
+                data.element.animate({
+                  d: {
+                    dur: 2000,
+                    from: data.path.clone().scale(1, 0).translate(0, data.chartRect.height()).stringify(),
+                    to: data.path.clone().stringify(),
+                    easing: Chartist.Svg.Easing.easeOutQuint
+                  }
+                });
+              }
+            })
+        }
+        else {
+            $('.ct-chart').fadeTo( 500, 0.0 );
+            setTimeout(function(){ $('.ct-chart').empty(); }, 500);
+        }      
+    }
+
     toggleInfo = function(elem, data) {
         if (elem) {
             $('#title')[0].innerHTML = Math.round(data[elem.id]);
             $('#subtitle')[0].innerHTML = elem.id;
             toggleHeatMap(elem.id);
+            toggleChart(elem.id);
         }
         else {
             $('#title')[0].innerHTML = original_temp;
             $('#subtitle')[0].innerHTML = original_desc;
             toggleHeatMap();
+            toggleChart();
         }
     }
 
