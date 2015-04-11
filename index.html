@@ -8,12 +8,333 @@
     <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
 
     <style>
+    	body {
+    		background-color: #5AC2E7;
+    		padding:0px 0px 0px 0px; 
+    		margin: 10px 0px 0px 0px;
+    		color: white;
+    	}
+    	#WebGL-output {
+    		opacity: 0.25;
+    		position: fixed;
+				-webkit-transform: rotate(180deg);
+				-moz-transform: rotate(180deg);
+				-o-transform: rotate(180deg);
+				-ms-transform: rotate(180deg);
+				transform: rotate(180deg); 
+				top: -5px;   		
+    	}
+    	#WebGL-output canvas {
+    		top: 0px;
+    	}
+    	.text {
+    		padding: 15% 15% 15% 15%;
+    	}
+    	p a {
+    		color: white;
+    		font-weight: bold;
+    	}
+    	p a:hover {
+    		color: white;
+    	}
+    	.baseChart {
+    		padding:0px 0px 0px 0px; 
+    		margin: 0px 0px 0px 0px;
+    		position: absolute;
+    		bottom: 0px;
+    		width: 100%;
+    		height: 150px;
+    	}
     </style>
 
 </head>
-<body style="padding:25%;margin-left:auto;margin-right:auto;">
+<body>
 
-Go to <a href="abstract.html">Abstract KB Attempt</a>.
+	<div id="WebGL-output"></div>
+
+	<div class="text">
+		<div class="row">
+			<div class="col-xs-6">
+				<h3>Weather+</h3>
+				<small>A vision for the Smart City's weather application.</small>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-6 pull-right">
+				<p>Go to the <a href="abstract.html">original DataCanvas contest submission</a>.</p>
+				<p>Go to the <a href="static.html">modified static site</a> (does not use live API data).</p>
+				<p>More about the author, <a href="http://kuanbutts.com/">Kuan Butts</a>.</p>
+			</div>
+		</div>
+	</div>
+
+	<canvas class="baseChart"></canvas>
 
 </body>
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/three.js/r61/three.min.js"></script>
+<script type="text/javascript" src="js/Chart.min.js"></script>
+
+<script type="text/javascript">
+
+// adding a chart
+
+	Chart.defaults.global = {
+    // Boolean - Whether to animate the chart
+    animation: true,
+
+    // Number - Number of animation steps
+    animationSteps: 60,
+
+    // String - Animation easing effect
+    animationEasing: "easeOutQuart",
+
+    // Boolean - If we should show the scale at all
+    showScale: false,
+
+    // Boolean - If we want to override with a hard coded scale
+    scaleOverride: false,
+
+    // ** Required if scaleOverride is true **
+    // Number - The number of steps in a hard coded scale
+    scaleSteps: null,
+    // Number - The value jump in the hard coded scale
+    scaleStepWidth: null,
+    // Number - The scale starting value
+    scaleStartValue: null,
+
+    // String - Colour of the scale line
+    scaleLineColor: "rgba(0,0,0,.1)",
+
+    // Number - Pixel width of the scale line
+    scaleLineWidth: 1,
+
+    // Boolean - Whether to show labels on the scale
+    scaleShowLabels: false,
+
+    // Interpolated JS string - can access value
+    scaleLabel: "<%=value%>",
+
+    // Boolean - Whether the scale should stick to integers, not floats even if drawing space is there
+    scaleIntegersOnly: true,
+
+    // Boolean - Whether the scale should start at zero, or an order of magnitude down from the lowest value
+    scaleBeginAtZero: false,
+
+    // String - Scale label font declaration for the scale label
+    scaleFontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+
+    // Number - Scale label font size in pixels
+    scaleFontSize: 0,
+
+    // String - Scale label font weight style
+    scaleFontStyle: "normal",
+
+    // String - Scale label font colour
+    scaleFontColor: "#666",
+
+    // Boolean - whether or not the chart should be responsive and resize when the browser does.
+    responsive: false,
+
+    // Boolean - whether to maintain the starting aspect ratio or not when responsive, if set to false, will take up entire container
+    maintainAspectRatio: true,
+
+    // Boolean - Determines whether to draw tooltips on the canvas or not
+    showTooltips: false,
+
+    // Function - Determines whether to execute the customTooltips function instead of drawing the built in tooltips (See [Advanced - External Tooltips](#advanced-usage-custom-tooltips))
+    customTooltips: false,
+
+    // Array - Array of string names to attach tooltip events
+    tooltipEvents: ["mousemove", "touchstart", "touchmove"],
+
+    // String - Tooltip background colour
+    tooltipFillColor: "rgba(0,0,0,0.8)",
+
+    // String - Tooltip label font declaration for the scale label
+    tooltipFontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+
+    // Number - Tooltip label font size in pixels
+    tooltipFontSize: 14,
+
+    // String - Tooltip font weight style
+    tooltipFontStyle: "normal",
+
+    // String - Tooltip label font colour
+    tooltipFontColor: "#fff",
+
+    // String - Tooltip title font declaration for the scale label
+    tooltipTitleFontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+
+    // Number - Tooltip title font size in pixels
+    tooltipTitleFontSize: 0,
+
+    // String - Tooltip title font weight style
+    tooltipTitleFontStyle: "bold",
+
+    // String - Tooltip title font colour
+    tooltipTitleFontColor: "#fff",
+
+    // Number - pixel width of padding around tooltip text
+    tooltipYPadding: 0,
+
+    // Number - pixel width of padding around tooltip text
+    tooltipXPadding: 0,
+
+    // Number - Size of the caret on the tooltip
+    tooltipCaretSize: 8,
+
+    // Number - Pixel radius of the tooltip border
+    tooltipCornerRadius: 0,
+
+    // Number - Pixel offset from point x to tooltip edge
+    tooltipXOffset: 0,
+
+    // String - Template string for single tooltips
+    tooltipTemplate: "",
+
+    // String - Template string for multiple tooltips
+    multiTooltipTemplate: "",
+
+    // Function - Will fire on animation progression.
+    onAnimationProgress: function(){},
+
+    // Function - Will fire on animation completion.
+    onAnimationComplete: function(){}
+	}
+
+	var options = {
+	  //Boolean - Whether the scale should start at zero, or an order of magnitude down from the lowest value
+	  scaleBeginAtZero : true,
+
+	  //Boolean - Whether grid lines are shown across the chart
+	  scaleShowGridLines : false,
+
+	  //String - Colour of the grid lines
+	  scaleGridLineColor : "rgba(0,0,0,0)",
+
+	  //Number - Width of the grid lines
+	  scaleGridLineWidth : 0,
+
+	  //Boolean - Whether to show horizontal lines (except X axis)
+	  scaleShowHorizontalLines: false,
+
+	  //Boolean - Whether to show vertical lines (except Y axis)
+	  scaleShowVerticalLines: false,
+
+	  //Boolean - If there is a stroke on each bar
+	  barShowStroke : true,
+
+	  //Number - Pixel width of the bar stroke
+	  barStrokeWidth : 0,
+
+	  //Number - Spacing between each of the X value sets
+	  barValueSpacing : 1,
+
+	  //Number - Spacing between data sets within X values
+	  barDatasetSpacing : 0,
+
+	  //String - A legend template
+	  legendTemplate : ""
+
+	}	
+
+	var data = {
+	    labels: [],
+	    datasets: [
+	        {
+	            label: "",
+	            fillColor: "rgba(220,220,220,0.5)",
+	            strokeColor: "rgba(220,220,220,0.0)",
+	            highlightFill: "rgba(220,220,220,0.5)",
+	            highlightStroke: "rgba(220,220,220,0.5)",
+	            data: [4,5,6,3,8,2,3,8,4,5,7,1,3,5]
+	        }
+	    ]
+	};	
+	var ctx = $(".baseChart").get(0).getContext("2d");
+	var myBarChart = new Chart(ctx).Bar(data, options);
+
+	window.setInterval( function() {
+		myBarChart.addData([Math.random()*10], []);
+		if (myBarChart.datasets[0].bars.length > 125) {
+			myBarChart.datasets[0].bars.splice(0,1)
+		}
+	}, 500)
+
+// adapted from http://codepen.io/anon/pen/jEjvPd (credit to author)
+	$(function (){
+	  var scene = new THREE.Scene();
+	  var camera = new THREE.PerspectiveCamera(45, window.innerWidth /     window.innerHeight, 0.1, 1000);
+	  var renderer = new THREE.WebGLRenderer();
+	  renderer.setSize(window.innerWidth, window.innerHeight);
+	 
+	  renderer.setClearColorHex(0x2e7c95); 
+	  scene.fog = new THREE.FogExp2( 0x3690ae, 0.0085 );
+	  
+	  var groundGeo = new THREE.PlaneGeometry(400,400,4,4);
+	  var groundMat = new THREE.MeshPhongMaterial({color:0x244876});
+	  groundMat.shininess = 100;
+	  var ground = new THREE.Mesh(groundGeo,groundMat);
+	  scene.add(ground);
+	  ground.position.x = 140; 
+	  ground.position.y = 0; 
+	  ground.position.z = -150; 
+	  ground.rotation.x = -1.55;
+	  
+	  camera.position.x = 0; 
+	  camera.position.y = 50; 
+	  camera.position.z = 0; 
+	  
+	  camera.rotation.y = -0.8;
+	  camera.rotation.z = -0.280;
+	  camera.rotation.x = -0.400;
+	  
+	  var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 ); 
+	  directionalLight.position.set( -20, 10, 30 ); 
+	  scene.add( directionalLight );
+	  
+	  var pointLight = new THREE.PointLight( 0x00FFF9, 10, 100 );
+	  scene.add(pointLight);
+	  
+	  var monolith = [];
+	  var monolithGeo = new THREE.CubeGeometry(8,4,8); 
+	  var monolithMat = new THREE.MeshPhongMaterial( {color: 0x244876}); 
+	  monolithMat.shininess = 100;
+	  var monolithRow = [];
+	  var rowZ = 0;
+	  
+	  for (r=0; r<35; r++){
+	    rowZ -= 10;
+	    
+	    for (i=0; i<35; i++){
+	      monolith[i] = new THREE.Mesh(monolithGeo, monolithMat); 
+	      monolith[i].position.x = i*10; 
+	      monolith[i].position.y = 0; 
+	      monolith[i].position.z = rowZ; 
+	    
+	      var rand = Math.ceil(Math.random()*10);
+	      monolith[i].scale.y = rand;
+	      scene.add(monolith[i]); 
+	    }
+	  }
+	  
+	  render();
+	  
+	  function render(){
+	    requestAnimationFrame(render);
+	    
+	    camera.position.z -= 0.1;
+	    camera.position.x += 0.1;
+	    pointLight.position.set(camera.position.x,camera.position.y,camera.position.z);
+	    
+	    renderer.render(scene, camera);
+	  };
+	  
+	  $("#WebGL-output").append(renderer.domElement); 
+	});	
+
+</script>
+
 </html>
