@@ -259,7 +259,7 @@
 	window.setInterval( function() {
 		myBarChart.addData([Math.random()*10], []);
 		if (myBarChart.datasets[0].bars.length > 125) {
-			myBarChart.datasets[0].bars.splice(0,1)
+			location.reload();
 		}
 	}, 500)
 
